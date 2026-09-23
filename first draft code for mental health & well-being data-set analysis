@@ -1,0 +1,309 @@
+
+import pandas as pd
+df = pd.read_csv('/content/Mental Health Dataset.csv')
+display(df.head())
+print("Coping Struggles Counts:")
+print(df['Coping_Struggles'].value_counts())
+user_genders = df['Gender']
+display(user_genders)
+keyword_matches = df[df['Coping_Struggles'].isin(['Yes', 'No'])]
+display(keyword_matches)
+crosstab_pct = pd.crosstab(df['Gender'], df['Coping_Struggles'], normalize='index') * 100
+display(crosstab_pct)
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('/content/Mental Health Dataset.csv')
+
+sns.set_theme(style="whitegrid")
+
+plt.figure(figsize=(8, 6))
+ax = sns.countplot(
+    data=df,
+    x='Gender',
+    hue='Coping_Struggles',
+    palette='Set2'
+)
+
+plt.title('Coping Struggles by Gender', fontsize=14, fontweight='bold', pad=15)
+plt.xlabel('Gender', fontsize=12)
+plt.ylabel('Count', fontsize=12)
+plt.legend(title='Coping Struggles', title_fontsize='11')
+
+for p in ax.patches:
+    height = p.get_height()
+    if height > 0:
+        ax.annotate(
+            f'{int(height)}',
+            (p.get_x() + p.get_width() / 2., height),
+            ha='center', va='bottom',
+            fontsize=10, xytext=(0, 3),
+            textcoords='offset points'
+        )
+
+plt.tight_layout()
+plt.show()
+
+
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('Mental Health Dataset.csv')
+
+print("Treatment values:", df['treatment'].value_counts(dropna=False))
+print("Occupation values:", df['Occupation'].value_counts(dropna=False))
+print("Gender values:", df['Gender'].value_counts(dropna=False))
+
+# Filter for those who received treatment ('Yes') and have an occupation (not null / not 'Others' depending on dataset)
+# Let's inspect rows with treatment == 'Yes'
+treated_df = df[df['treatment'].str.strip().str.lower() == 'yes'].copy()
+
+# Group by Gender and Occupation
+gender_occ_counts = treated_df.groupby(['Gender', 'Occupation']).size().reset_index(name='count')
+print(gender_occ_counts)
+
+# Total treated males vs females with an occupation
+treated_gender_counts = treated_df['Gender'].value_counts()
+print("\nTreated gender counts:\n", treated_gender_counts)
+plt.figure(figsize=(12, 6))
+
+# Plot 1: Male vs Female proportions of Treated & Working population
+plt.subplot(1, 2, 1)
+treated_gender = treated_df['Gender'].value_counts()
+plt.pie(
+    treated_gender,
+    labels=treated_gender.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=['#66b3ff', '#ff9999'],
+    explode=(0.05, 0)
+)
+plt.title('Gender Breakdown\n(Treated & Employed Subjects)', fontsize=12, fontweight='bold')
+
+# Plot 2: Detailed Occupation Breakdown for Treated Population
+plt.subplot(1, 2, 2)
+occ_gender = treated_df.groupby(['Gender', 'Occupation']).size().unstack()
+
+# Plot pie chart of occupation distribution by gender
+labels = [f"{g} - {o}" for g in occ_gender.index for o in occ_gender.columns]
+sizes = [occ_gender.loc[g, o] for g in occ_gender.index for o in occ_gender.columns]
+
+plt.pie(
+    sizes,
+    labels=labels,
+    autopct='%1.1f%%',
+    startangle=90,
+    pctdistance=0.85
+)
+plt.title('Occupation Breakdown by Gender\n(Treated Subjects)', fontsize=12, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig('treated_employed_pie.png', dpi=300)
+plt.close()
+df['treated_num'] = (df['treatment'].str.strip().str.lower() == 'yes').astype(int)
+df['is_male'] = (df['Gender'].str.strip().str.lower() == 'male').astype(int)
+df['is_female'] = (df['Gender'].str.strip().str.lower() == 'female').astype(int)
+
+# One-hot encode occupations
+occ_dummies = pd.get_dummies(df['Occupation'], prefix='occ')
+
+analysis_df = pd.concat([df[['treated_num', 'is_male', 'is_female']], occ_dummies], axis=1)
+
+print("Correlation Matrix with Treatment:")
+print(analysis_df.corr()['treated_num'])
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Female Occupation Pie
+female_treated = treated_df[treated_df['Gender'] == 'Female']['Occupation'].value_counts()
+axes[0].pie(
+    female_treated,
+    labels=female_treated.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel1')
+)
+axes[0].set_title('Females Receiving Treatment\nby Occupation', fontsize=13, fontweight='bold')
+
+# Male Occupation Pie
+male_treated = treated_df[treated_df['Gender'] == 'Male']['Occupation'].value_counts()
+axes[1].pie(
+    male_treated,
+    labels=male_treated.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel2')
+)
+axes[1].set_title('Males Receiving Treatment\nby Occupation', fontsize=13, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig('treated_occupations_by_gender_pie.png', dpi=300)
+plt.close()
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Load dataset
+df = pd.read_csv('/content/Mental Health Dataset.csv')
+
+# 2. Filter subjects who received treatment ('Yes')
+treated_df = df[df['treatment'].str.strip().str.lower() == 'yes'].copy()
+
+# 3. Compute cross-tabulation table (Percentage of treated individuals per occupation by gender)
+occ_by_gender = pd.crosstab(treated_df['Gender'], treated_df['Occupation'], normalize='index') * 100
+print("Percentage of Occupations for Treated Individuals:")
+display(occ_by_gender)
+
+# 4. Set up side-by-side Pie Charts for Males and Females
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Female Pie Chart
+female_treated = treated_df[treated_df['Gender'] == 'Female']['Occupation'].value_counts()
+axes[0].pie(
+    female_treated,
+    labels=female_treated.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel1')
+)
+axes[0].set_title('Treated Females by Occupation', fontsize=13, fontweight='bold')
+
+# Male Pie Chart
+male_treated = treated_df[treated_df['Gender'] == 'Male']['Occupation'].value_counts()
+axes[1].pie(
+    male_treated,
+    labels=male_treated.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel2')
+)
+axes[1].set_title('Treated Males by Occupation', fontsize=13, fontweight='bold')
+
+plt.tight_layout()
+plt.show()
+# 1. Load dataset
+df = pd.read_csv('/content/Mental Health Dataset.csv')
+
+# 2. Filter for subjects receiving treatment AND non-occupied roles
+non_occupied_roles = ['Housewife', 'Student', 'Others']
+treated_not_occ = df[(df['treatment'] == 'Yes') & (df['Occupation'].isin(non_occupied_roles))]
+
+# 3. Create side-by-side Pie Charts for Females and Males
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Female Pie Chart
+female_counts = treated_not_occ[treated_not_occ['Gender'] == 'Female']['Occupation'].value_counts()
+axes[0].pie(
+    female_counts,
+    labels=female_counts.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel1')
+)
+axes[0].set_title('Treated Females (Non-Occupied)', fontsize=13, fontweight='bold')
+
+# Male Pie Chart
+male_counts = treated_not_occ[treated_not_occ['Gender'] == 'Male']['Occupation'].value_counts()
+axes[1].pie(
+    male_counts,
+    labels=male_counts.index,
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=sns.color_palette('Pastel2')
+)
+axes[1].set_title('Treated Males (Not Occupied)', fontsize=13, fontweight='bold')
+
+plt.tight_layout()
+plt.show()
+# 1. Filter Non-Occupied dataframe
+non_occupied_roles = ['Housewife', 'Student', 'Others']
+not_occ_df = df[df['Occupation'].isin(non_occupied_roles)].copy()
+
+# 2. Filter for subjects who responded 'No' for Work Interest
+no_work_int_df = not_occ_df[not_occ_df['Work_Interest'] == 'No']
+
+# 3. Plot Pie Chart for Work Interest & Bar Chart for Mood Swings
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Chart A: Pie chart of Work Interest within Non-Occupied
+work_int = not_occ_df['Work_Interest'].value_counts()
+axes[0].pie(
+    work_int,
+    labels=[f"No Work Interest\n({work_int['No']:,})", f"Maybe\n({work_int['Maybe']:,})", f"Has Work Interest\n({work_int['Yes']:,})"],
+    autopct='%1.1f%%',
+    startangle=140,
+    colors=['#ff6b6b', '#fca311', '#4ecdc4'],
+    explode=(0.08, 0, 0)
+)
+axes[0].set_title('Work Interest Breakdown\n(Non-Occupied Group)', fontsize=13, fontweight='bold')
+
+# Chart B: Subdivided Mood Swings for 'No Work Interest' group by Gender
+mood_df = no_work_int_df.groupby(['Gender', 'Mood_Swings']).size().unstack()
+mood_df.plot(kind='bar', ax=axes[1], color=['#2b2d42', '#8d99ae', '#edf2f4'], edgecolor='black')
+
+axes[1].set_title('Mood Swings Distribution for Subjects with\nNo Work Interest (Non-Occupied)', fontsize=13, fontweight='bold')
+axes[1].set_xlabel('Gender', fontsize=11)
+axes[1].set_ylabel('Subject Count', fontsize=11)
+axes[1].legend(title='Mood Swings Level')
+axes[1].set_xticklabels(axes[1].get_xticklabels(), rotation=0)
+
+plt.tight_layout()
+plt.show()
+# 1. Load the dataset
+df = pd.read_csv('/content/Mental Health Dataset.csv')
+
+# 2. Compute cross-tabulation tables per gender
+ct_female = pd.crosstab(
+    df[df['Gender'] == 'Female']['Mood_Swings'],
+    df[df['Gender'] == 'Female']['Coping_Struggles'],
+    normalize='index'
+) * 100
+
+ct_male = pd.crosstab(
+    df[df['Gender'] == 'Male']['Mood_Swings'],
+    df[df['Gender'] == 'Male']['Coping_Struggles'],
+    normalize='index'
+) * 100
+
+# 3. Calculate separate correlation coefficients
+for gender in ['Female', 'Male']:
+    sub = df[df['Gender'] == gender]
+    coping_num = (sub['Coping_Struggles'].str.strip().str.lower() == 'yes').astype(int)
+    mood_num = sub['Mood_Swings'].map({'Low': 0, 'Medium': 1, 'High': 2})
+    print(f"Pearson Correlation ({gender}): {coping_num.corr(mood_num):.4f}")
+
+# 4. Plot side-by-side heatmaps
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Female Heatmap
+sns.heatmap(
+    ct_female,
+    annot=True,
+    fmt='.1f',
+    cmap='PuRd',
+    ax=axes[0],
+    cbar_kws={'label': 'Percentage (%)'},
+    linewidths=1,
+    annot_kws={"size": 12, "weight": "bold"}
+)
+axes[0].set_title('Females: Coping Struggles by Mood Swings (%)', fontsize=12, fontweight='bold')
+axes[0].set_xlabel('Coping Struggles', fontsize=11)
+axes[0].set_ylabel('Mood Swings Level', fontsize=11)
+
+# Male Heatmap
+sns.heatmap(
+    ct_male,
+    annot=True,
+    fmt='.1f',
+    cmap='Blues',
+    ax=axes[1],
+    cbar_kws={'label': 'Percentage (%)'},
+    linewidths=1,
+    annot_kws={"size": 12, "weight": "bold"}
+)
+axes[1].set_title('Males: Coping Struggles by Mood Swings (%)', fontsize=12, fontweight='bold')
+axes[1].set_xlabel('Coping Struggles', fontsize=11)
+axes[1].set_ylabel('Mood Swings Level', fontsize=11)
+
+plt.tight_layout()
+plt.show()
