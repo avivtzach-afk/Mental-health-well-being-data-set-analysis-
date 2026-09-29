@@ -1,2 +1,2 @@
 # Mental-health-well-being-data-set-analysis-
-I gathered information from this data set and presented certain issues of it in a figurative manner. I've conducted the Pearson correlative results in the attributed aspects of this project
+I gathered information from a the 'Kaggle' source data-set on mental health, in attempt to demonstrate gross patients distribution on emotional cooperation, work integration and the correlation of a successful treatment to working/mood swings/....
